@@ -1,0 +1,33 @@
+public sys_write
+sys_write:
+	use64
+	mov rax, 1
+
+	syscall 
+	ret
+
+public sys_mmap
+sys_mmap:
+	use64
+	mov rax, 9
+	mov r10, rcx
+
+	syscall
+	ret
+
+public sys_munmap
+sys_munmap:
+	use64
+	mov rax, 11
+
+	syscall
+	ret
+
+public sys_exit
+sys_exit:
+	use64
+	mov rax, 60
+
+	syscall
+	ret
+

@@ -1,0 +1,33 @@
+match =WIN64, PLATFORM {
+	format MS64 COFF
+	include "asm/cpuid-x86_64.fasm"
+}
+
+match =LINUX, PLATFORM {
+	format ELF64
+
+	include "asm/cpuid-x86_64.fasm"
+	include "asm/syscall-linux-x86_64.fasm"
+
+	extrn main
+	public start as '_start'
+	start:
+		use64
+
+		; Credit goes to Chris Wellons, author of nullprogram.com
+		; https://nullprogram.com/blog/2023/03/23/
+		; I wanted a way to provide argc (Argument Count) and argv
+		; (Argument Vector). This also provides envp (Environment Pointer)
+		;
+		; He even put this code, inside stack_head.c, in the public domain!
+		mov rdi, [rsp]
+		lea rsi, [rsp + 8]
+		lea rdx, [rsi + rdi * 8 + 8]
+
+		call main
+
+		mov rdi, rax
+		mov rax, 60
+		syscall
+}
+

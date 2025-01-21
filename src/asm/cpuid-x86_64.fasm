@@ -1,0 +1,82 @@
+public cpuid_native
+match =WIN64, PLATFORM {
+	cpuid_native:
+		use64
+
+		pushq rbx
+		pushq rdx
+		pushq rcx
+
+		mov DWORD eax, [rcx]
+		mov DWORD ecx, [r8]
+		xor edx, edx
+		xor ebx, ebx
+
+		cpuid
+
+		mov [r8], ecx
+		mov [r9], edx
+
+		popq rcx
+		mov [rcx], eax
+
+		popq rdx
+		mov [rdx], ebx
+
+		popq rbx
+		ret
+}
+
+match =LINUX, PLATFORM {
+	cpuid_native:
+		use64
+
+		pushq rbx
+		pushq rcx
+		pushq rdx
+
+		mov DWORD eax, [rdi]
+		mov DWORD ecx, [rdx]
+		xor edx, edx
+		xor ebx, ebx
+
+		cpuid
+
+		mov [rdi], eax
+		mov [rsi], ebx
+
+		popq rax
+		mov [rax], ecx
+
+		popq rax
+		mov [rax], edx
+
+		popq rbx
+		ret
+}
+
+; Function from AMD Documentation with slight modifications
+public has_cpuid
+has_cpuid:
+	use32              ; Set for 32-Bits
+
+	pushfd             ; save EFLAGS
+	pop eax            ; store EFLAGS in EAX
+	mov ecx, eax       ; save in EBX for later testing
+
+	xor eax, 00200000h ; toggle bit 21
+	push eax           ; push to stack
+	popfd              ; save changed EAX to EFLAGS
+	pushfd             ; push EFLAGS to TOS
+	pop eax            ; store EFLAGS in EAX
+
+	cmp eax, ecx       ; see if bit 21 has changed
+	jz .NO_CPUID       ; if no change, no CPUID
+
+	mov eax, 0         ; Set eax to return success value (0)
+	ret                ; return eax
+
+	.NO_CPUID:
+	mov eax, 1         ; Set eax to return a failure value (non-0)
+	ret                ; return eax
+
